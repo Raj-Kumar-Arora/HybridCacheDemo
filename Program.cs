@@ -15,6 +15,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
+builder.Services.AddMemoryCache(); // register IMemoryCache (L1)
+
 // Redis (L2 cache)
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -23,7 +25,11 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 // HybridCache (L1 + L2)
-builder.Services.AddHybridCache();
+builder.Services.AddHybridCache(options =>
+{
+    options.DisableCompression = true;
+    options.MaximumPayloadBytes = 1024 * 1024;
+});
 
 // Controllers
 builder.Services.AddControllers();
