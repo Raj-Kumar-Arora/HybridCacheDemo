@@ -6,14 +6,9 @@ namespace HybridCacheDemo.Controllers;
 
 [ApiController]
 [Route("api/products")]
-public class ProductController : ControllerBase
+public class ProductController(ProductService service) : ControllerBase
 {
-    private readonly ProductService _service;
-
-    public ProductController(ProductService service)
-    {
-        _service = service;
-    }
+    private readonly ProductService _service = service;
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)

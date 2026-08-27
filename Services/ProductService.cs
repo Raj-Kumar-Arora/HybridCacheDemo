@@ -5,16 +5,10 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace HybridCacheDemo.Services;
 
-public class ProductService
+public class ProductService(AppDbContext db, HybridCache cache)
 {
-    private readonly AppDbContext _db;
-    private readonly HybridCache _cache;
-
-    public ProductService(AppDbContext db, HybridCache cache)
-    {
-        _db = db;
-        _cache = cache;
-    }
+    private readonly AppDbContext _db = db;
+    private readonly HybridCache _cache = cache;
 
     public async Task<Product?> GetProductAsync(int id, CancellationToken token = default)
     {
