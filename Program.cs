@@ -3,6 +3,7 @@ using HybridCacheDemo.Services;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,8 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<IProductService>(sp =>
     new ProductServiceCacheDecorator(
         sp.GetRequiredService<ProductService>(),
-        sp.GetRequiredService<HybridCache>()));
+        sp.GetRequiredService<HybridCache>(),
+        sp.GetRequiredService<IMemoryCache>()));
 
 var app = builder.Build();
 
