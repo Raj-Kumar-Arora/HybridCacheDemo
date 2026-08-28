@@ -2,6 +2,7 @@ using HybridCacheDemo.Data;
 using HybridCacheDemo.Services;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.Extensions.Caching.Hybrid;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +35,12 @@ builder.Services.AddHybridCache(options =>
 // Controllers
 builder.Services.AddControllers();
 
+// Register DB-only ProductService and then decorate it with caching behavior.
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<IProductService>(sp =>
+    new ProductServiceCacheDecorator(
+        sp.GetRequiredService<ProductService>(),
+        sp.GetRequiredService<HybridCache>()));
 
 var app = builder.Build();
 

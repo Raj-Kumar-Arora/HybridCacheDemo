@@ -6,9 +6,9 @@ namespace HybridCacheDemo.Controllers;
 
 [ApiController]
 [Route("api/products")]
-public class ProductController(ProductService service) : ControllerBase
+public class ProductController(IProductService service) : ControllerBase
 {
-    private readonly ProductService _service = service;
+    private readonly IProductService _service = service;
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
@@ -22,5 +22,12 @@ public class ProductController(ProductService service) : ControllerBase
     {
         var created = await _service.CreateProductAsync(product);
         return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, Product product)
+    {
+        var updated = await _service.UpdateProductAsync(id, product);
+        return updated is null ? NotFound() : Ok(updated);
     }
 }

@@ -1,26 +1,21 @@
 ﻿using HybridCacheDemo.Data;
 using HybridCacheDemo.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 
 namespace HybridCacheDemo.Services;
 
-public class ProductService(AppDbContext db, HybridCache cache)
+public class ProductService : IProductService
 {
-    private readonly AppDbContext _db = db;
-    private readonly HybridCache _cache = cache;
+    private readonly AppDbContext _db;
+
+    public ProductService(AppDbContext db)
+    {
+        _db = db;
+    }
 
     public async Task<Product?> GetProductAsync(int id, CancellationToken token = default)
     {
-        return await _cache.GetOrCreateAsync(
-            $"product-{id}",
-            async cancel => await _db.Products.FirstOrDefaultAsync(p => p.Id == id, cancel),
-            cancellationToken: token,
-            options: new HybridCacheEntryOptions
-            {
-                LocalCacheExpiration = TimeSpan.FromMinutes(2),     // L1 - IMemoryCache
-                Expiration = TimeSpan.FromMinutes(10)               // L2 - Redis
-            });
+        return await _db.Products.FirstOrDefaultAsync(p => p.Id == id, token);
     }
 
     public async Task<Product> CreateProductAsync(Product product)
@@ -30,17 +25,6 @@ public class ProductService(AppDbContext db, HybridCache cache)
 
         _db.Products.Add(product);
         await _db.SaveChangesAsync();
-
-        // Invalidate cache for this product
-        try
-        {
-            await _cache.RemoveAsync($"product-{product.Id}");
-        }
-        catch (Exception)
-        {
-            // If L2 (Redis) is unavailable, don't fail the create operation.
-            // Consider logging this in real app.
-        }
 
         return product;
     }
@@ -57,17 +41,6 @@ public class ProductService(AppDbContext db, HybridCache cache)
         existing.Category = updatedProduct.Category;
 
         await _db.SaveChangesAsync();
-
-        // Invalidate cache for this product (best-effort)
-        try
-        {
-            await _cache.RemoveAsync($"product-{id}");
-        }
-        catch (Exception)
-        {
-            // Swallow cache errors to avoid failing the update when Redis is down.
-            // Consider adding logging here.
-        }
 
         return existing;
     }
